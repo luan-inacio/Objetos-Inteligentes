@@ -6,7 +6,7 @@
 
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
-const char* mqtt_server = "mqtt.eclipseprojects.io";
+const char* mqtt_server = "broker.hivemq.com";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -14,17 +14,25 @@ PubSubClient client(espClient);
 void setup_wifi() {
   delay(100);
   WiFi.begin(ssid, password);
+  Serial.print("Conectando ao WiFi");
   while (WiFi.status() != WL_CONNECTED) {
-    delay(250);
+    delay(500);
+    Serial.print(".");
   }
+  Serial.println(" Conectado ao WiFi!");
 }
 
 void reconnect() {
+  // Loop até reconectar
   while (!client.connected()) {
+    Serial.print("Tentando conexão MQTT...");
     if (client.connect("ESP32Client")) {
-      // Conectado
+      Serial.println(" Conectado ao broker MQTT!");
     } else {
-      delay(500);
+      Serial.print(" Falha na conexão, rc=");
+      Serial.print(client.state());
+      Serial.println(" Tentando novamente em 5 segundos...");
+      delay(5000);
     }
   }
 }
@@ -32,6 +40,7 @@ void reconnect() {
 void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
+  
   Serial.begin(115200);
   setup_wifi();
   client.setServer(mqtt_server, 1883);
@@ -39,8 +48,12 @@ void setup() {
 
 void loop() {
   if (!client.connected()) {
+    Serial.println("MQTT desconectado! Tentando reconectar...");
     reconnect();
+  } else {
+    Serial.println("MQTT ainda conectado.");
   }
+
   client.loop();
 
   int sensorValue = analogRead(SENSOR_PIN);
@@ -59,8 +72,14 @@ void loop() {
     digitalWrite(BUZZER_PIN, LOW);
   }
 
-  // Publicação MQTT
-  client.publish("sensor/vazamento", status.c_str());
+  // Publicação MQTT com verificação de sucesso
+  bool sucesso = client.publish("SensorMack/vazamento", status.c_str());
 
-  delay(2000);
+  if (sucesso) {
+    Serial.println("Mensagem MQTT enviada com sucesso!");
+  } else {
+    Serial.println("Falha ao enviar mensagem MQTT.");
+  }
+
+  delay(2000);  
 }

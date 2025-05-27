@@ -19,7 +19,7 @@ Este projeto simula um sistema de detecção de vazamento de água utilizando um
 
 ## 📡 Comunicação MQTT
 
-- **Broker:** mqtt.eclipseprojects.io
+- **Broker:** broker.hivemq.com
 - **Porta:** 1883 (padrão para conexões MQTT sem criptografia)
 - **Tópico de publicação:** `sensorMack/vazamento`
 - Mensagens enviadas:
